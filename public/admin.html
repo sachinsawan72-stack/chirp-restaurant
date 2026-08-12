@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chap House - Admin Orders</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f2f2f7; padding:20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color:#667eea; margin-bottom: 15px; }
+    .key-box { display:flex; gap:10px; margin-bottom:20px; }
+    input, select { padding:10px; border:1px solid #ccc; border-radius:8px; font-size:1em; }
+    input[type="password"] { flex:1; }
+    button { padding:10px 18px; background:#667eea; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
+    button:hover { background:#5568d3; }
+    .order-card { background:white; border-radius:12px; padding:15px 20px; margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+    .order-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+    .order-id { font-weight:700; color:#333; }
+    .order-time { color:#888; font-size:0.85em; }
+    .order-items { color:#555; margin: 8px 0; font-size:0.95em; }
+    .order-total { font-weight:700; color:#667eea; font-size:1.1em; }
+    .status-badge { padding:4px 12px; border-radius:12px; font-size:0.8em; font-weight:600; text-transform:capitalize; }
+    .status-received { background:#fff3cd; color:#856404; }
+    .status-preparing { background:#cfe2ff; color:#084298; }
+    .status-ready { background:#d1e7dd; color:#0f5132; }
+    .status-completed { background:#e2e3e5; color:#41464b; }
+    .empty { text-align:center; color:#999; padding:40px; }
+
+    .tabs { display:flex; gap:10px; margin-bottom:20px; }
+    .tab-btn { background:#e9e9f0; color:#555; }
+    .tab-btn.active { background:#667eea; color:white; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .menu-image-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+    .menu-image-card { background:white; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center; }
+    .menu-image-card img, .menu-image-card .emoji-preview {
+        width:100%; height:130px; object-fit:cover; border-radius:8px; margin-bottom:10px; background:#f0f0f5;
+        display:flex; align-items:center; justify-content:center; font-size:3em;
+    }
+    .menu-image-card h4 { font-size:0.95em; margin-bottom:8px; color:#333; }
+    .menu-image-card input[type="file"] { width:100%; font-size:0.8em; margin-bottom:8px; }
+    .menu-image-card button { width:100%; font-size:0.85em; padding:8px; margin-top:6px; }
+    .upload-status { font-size:0.8em; margin-top:6px; min-height:16px; }
+
+    .edit-fields { text-align:left; margin-top:10px; }
+    .edit-fields label { font-size:0.75em; color:#888; display:block; margin-top:6px; }
+    .edit-fields input, .edit-fields select, .edit-fields textarea {
+        width:100%; font-size:0.85em; padding:6px; margin-top:2px;
+    }
+    .edit-fields textarea { resize:vertical; min-height:40px; }
+    .btn-row { display:flex; gap:6px; margin-top:8px; }
+    .btn-row button { flex:1; }
+    .btn-save { background:#27ae60; }
+    .btn-save:hover { background:#229954; }
+    .btn-delete { background:#e74c3c; }
+    .btn-delete:hover { background:#c0392b; }
+
+    .add-item-card {
+        background:white; border-radius:12px; padding:18px; margin-bottom:20px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    .add-item-card h3 { color:#667eea; margin-bottom:12px; }
+    .add-item-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:10px; }
+    .add-item-grid input, .add-item-grid select, .add-item-grid textarea { width:100%; }
+
+
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🐦 Chap House - Admin Dashboard</h1>
+    <div class="key-box">
+        <input type="password" id="adminKey" placeholder="Admin key daalo">
+        <button onclick="loadOrders(); loadMenuImages();">Unlock / Load</button>
+        <button onclick="startAuto()">Auto-refresh ON</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('orders')">📋 Orders</button>
+        <button class="tab-btn" onclick="switchTab('images')">🍽️ Menu Items</button>
+    </div>
+
+    <div id="ordersTab" class="tab-content active">
+        <div id="orders"></div>
+    </div>
+
+    <div id="imagesTab" class="tab-content">
+        <div class="add-item-card">
+            <h3>➕ Naya Item Add Karo</h3>
+            <div class="add-item-grid">
+                <input type="text" id="newName" placeholder="Item ka naam">
+                <select id="newCategory">
+                    <option value="appetizers">Appetizers</option>
+                    <option value="mains">Main Course</option>
+                    <option value="desserts">Desserts</option>
+                    <option value="drinks">Drinks</option>
+                </select>
+                <input type="number" id="newPrice" placeholder="Price (₹)" step="0.01">
+                <input type="text" id="newEmoji" placeholder="Emoji (e.g. 🍕)">
+            </div>
+            <textarea id="newDescription" placeholder="Description" rows="2" style="width:100%; margin-bottom:10px;"></textarea>
+            <button class="btn-save" onclick="addNewItem()">➕ Add Item</button>
+        </div>
+
+        <div id="menuImageGrid" class="menu-image-grid"></div>
+    </div>
+</div>
+
+<script>
+let autoTimer = null;
+
+function savedKey() {
+    return sessionStorage.getItem('chirpAdminKey') || '';
+}
+
+document.getElementById('adminKey').value = savedKey();
+
+async function loadOrders() {
+    const key = document.getElementById('adminKey').value.trim();
+    if (!key) { alert('Admin key daalo'); return; }
+    sessionStorage.setItem('chirpAdminKey', key);
+
+    const res = await fetch('/api/admin/orders', { headers: { 'x-admin-key': key } });
+    if (res.status === 401) {
+        alert('Admin key galat hai.');
+        return;
+    }
+    const orders = await res.json();
+    render(orders);
+}
+
+function render(orders) {
+    const container = document.getElementById('orders');
+    if (orders.length === 0) {
+        container.innerHTML = '<div class="empty">Abhi tak koi order nahi aaya.</div>';
+        return;
+    }
+    container.innerHTML = orders.map(o => `
+        <div class="order-card">
+            <div class="order-top">
+                <span class="order-id">Order #${o.id} — ${o.customerName || 'Guest'} ${o.tableNumber ? '(Table ' + o.tableNumber + ')' : ''}</span>
+                <span class="order-time">${new Date(o.createdAt).toLocaleString()}</span>
+            </div>
+            <div class="order-items">${o.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+            <div class="order-top">
+                <span class="order-total">₹${o.total.toFixed(2)}</span>
+                <div>
+                    <select onchange="updateStatus(${o.id}, this.value)">
+                        <option value="received" ${o.status==='received'?'selected':''}>Received</option>
+                        <option value="preparing" ${o.status==='preparing'?'selected':''}>Preparing</option>
+                        <option value="ready" ${o.status==='ready'?'selected':''}>Ready</option>
+                        <option value="completed" ${o.status==='completed'?'selected':''}>Completed</option>
+                    </select>
+                    <span class="status-badge status-${o.status}">${o.status}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function updateStatus(id, status) {
+    const key = savedKey();
+    await fetch(`/api/admin/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+        body: JSON.stringify({ status })
+    });
+    loadOrders();
+}
+
+function startAuto() {
+    if (autoTimer) return;
+    autoTimer = setInterval(loadOrders, 15000);
+    alert('Har 15 second me orders refresh hongi.');
+}
+
+// ---------- Tabs ----------
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+    document.getElementById(tab === 'orders' ? 'ordersTab' : 'imagesTab').classList.add('active');
+}
+
+// ---------- Menu Images + Edit ----------
+async function loadMenuImages() {
+    const res = await fetch('/api/menu');
+    const menu = await res.json();
+    const grid = document.getElementById('menuImageGrid');
+
+    grid.innerHTML = menu.map(item => `
+        <div class="menu-image-card" id="card-${item.id}">
+            ${item.image
+                ? `<img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.outerHTML='<div class=\\'emoji-preview\\'>${item.emoji}</div>';">`
+                : `<div class="emoji-preview">${item.emoji}</div>`}
+
+            <input type="file" id="file-${item.id}" accept="image/*">
+            <button onclick="uploadImage(${item.id})">📤 Upload Image</button>
+            <div class="upload-status" id="status-${item.id}"></div>
+
+            <div class="edit-fields">
+                <label>Naam</label>
+                <input type="text" id="name-${item.id}" value="${item.name.replace(/"/g, '&quot;')}">
+
+                <label>Category</label>
+                <select id="category-${item.id}">
+                    <option value="appetizers" ${item.category==='appetizers'?'selected':''}>Appetizers</option>
+                    <option value="mains" ${item.category==='mains'?'selected':''}>Main Course</option>
+                    <option value="desserts" ${item.category==='desserts'?'selected':''}>Desserts</option>
+                    <option value="drinks" ${item.category==='drinks'?'selected':''}>Drinks</option>
+                </select>
+
+                <label>Price (₹)</label>
+                <input type="number" id="price-${item.id}" value="${item.price}" step="0.01">
+
+                <label>Description</label>
+                <textarea id="desc-${item.id}">${item.description}</textarea>
+
+                <div class="btn-row">
+                    <button class="btn-save" onclick="saveItemDetails(${item.id})">💾 Save</button>
+                    <button class="btn-delete" onclick="deleteItem(${item.id})">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function saveItemDetails(itemId) {
+    const key = savedKey();
+    if (!key) { alert('Pehle admin key daal kar Unlock karo.'); return; }
+
+    const body = {
+        name: document.getElementById(`name-${itemId}`).value,
+        category: document.getElementById(`category-${itemId}`).value,
+        price: document.getElementById(`price-${itemId}`).value,
+        description: document.getElementById(`desc-${itemId}`).value
+    };
+
+    const res = await fetch(`/api/admin/menu/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const data = await res.json();
+        alert('Save nahi hua: ' + (data.error || 'Unknown error'));
+        return;
+    }
+
+    alert('✅ Item update ho gaya!');
+    loadMenuImages();
+}
+
+async function deleteItem(itemId) {
+    const key = savedKey();
+    if (!key) { alert('Pehle admin key daal kar Unlock karo.'); return; }
+
+    if (!confirm('Pakka is item ko delete karna hai? Yeh permanently hat jayega.')) return;
+
+    const res = await fetch(`/api/admin/menu/${itemId}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-key': key }
+    });
+
+    if (!res.ok) {
+        const data = await res.json();
+        alert('Delete nahi hua: ' + (data.error || 'Unknown error'));
+        return;
+    }
+
+    loadMenuImages();
+}
+
+async function addNewItem() {
+    const key = savedKey();
+    if (!key) { alert('Pehle admin key daal kar Unlock karo.'); return; }
+
+    const name = document.getElementById('newName').value.trim();
+    if (!name) { alert('Item ka naam daalo.'); return; }
+
+    const body = {
+        name,
+        category: document.getElementById('newCategory').value,
+        price: document.getElementById('newPrice').value || 0,
+        emoji: document.getElementById('newEmoji').value.trim() || '🍽️',
+        description: document.getElementById('newDescription').value.trim()
+    };
+
+    const res = await fetch('/api/admin/menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const data = await res.json();
+        alert('Add nahi hua: ' + (data.error || 'Unknown error'));
+        return;
+    }
+
+    // form clear karo
+    document.getElementById('newName').value = '';
+    document.getElementById('newPrice').value = '';
+    document.getElementById('newEmoji').value = '';
+    document.getElementById('newDescription').value = '';
+
+    alert('✅ Naya item add ho gaya!');
+    loadMenuImages();
+}
+
+async function uploadImage(itemId) {
+    const key = savedKey();
+    if (!key) { alert('Pehle admin key daal kar Unlock karo.'); return; }
+
+    const fileInput = document.getElementById(`file-${itemId}`);
+    const statusEl = document.getElementById(`status-${itemId}`);
+    const file = fileInput.files[0];
+
+    if (!file) {
+        statusEl.textContent = 'Pehle image file select karo.';
+        statusEl.style.color = '#c0392b';
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    statusEl.textContent = 'Upload ho raha hai...';
+    statusEl.style.color = '#666';
+
+    try {
+        const res = await fetch(`/api/admin/menu/${itemId}/image-upload`, {
+            method: 'POST',
+            headers: { 'x-admin-key': key },
+            body: formData
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            statusEl.textContent = data.error || 'Upload fail hua.';
+            statusEl.style.color = '#c0392b';
+            return;
+        }
+
+        statusEl.textContent = '✅ Image update ho gayi!';
+        statusEl.style.color = '#0f5132';
+        loadMenuImages(); // preview refresh
+    } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        statusEl.style.color = '#c0392b';
+    }
+}
+</script>
+</body>
+</html>

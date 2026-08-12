@@ -1,0 +1,164 @@
+[
+  {
+    "id": 1,
+    "name": "Crispy Spring Rolls",
+    "category": "appetizers",
+    "price": 8.99,
+    "description": "Golden fried spring rolls with sweet chili sauce",
+    "emoji": "🥟",
+    "image": ""
+  },
+  {
+    "id": 2,
+    "name": "Chiken wings",
+    "category": "appetizers",
+    "price": 350,
+    "description": "Spicy chicken wings with ranch dressing",
+    "emoji": "🍗",
+    "image": ""
+  },
+  {
+    "id": 3,
+    "name": "Mozzarella Sticks",
+    "category": "appetizers",
+    "price": 9.99,
+    "description": "Breaded mozzarella with marinara sauce",
+    "emoji": "🧀",
+    "image": ""
+  },
+  {
+    "id": 4,
+    "name": "Loaded Nachos",
+    "category": "appetizers",
+    "price": 11.99,
+    "description": "Tortilla chips with cheese, jalapeños, and sour cream",
+    "emoji": "🌮",
+    "image": ""
+  },
+  {
+    "id": 5,
+    "name": "Grilled Salmon",
+    "category": "mains",
+    "price": 24.99,
+    "description": "Fresh Atlantic salmon with roasted vegetables",
+    "emoji": "🐟",
+    "image": ""
+  },
+  {
+    "id": 6,
+    "name": "Beef Burger Deluxe",
+    "category": "mains",
+    "price": 15.99,
+    "description": "Angus beef patty with bacon, cheese, and fries",
+    "emoji": "🍔",
+    "image": ""
+  },
+  {
+    "id": 7,
+    "name": "Chicken Alfredo Pasta",
+    "category": "mains",
+    "price": 18.99,
+    "description": "Creamy fettuccine with grilled chicken",
+    "emoji": "🍝",
+    "image": ""
+  },
+  {
+    "id": 8,
+    "name": "Veggie Supreme Pizza",
+    "category": "mains",
+    "price": 16.99,
+    "description": "12-inch pizza with fresh vegetables and mozzarella",
+    "emoji": "🍕",
+    "image": ""
+  },
+  {
+    "id": 9,
+    "name": "BBQ Ribs",
+    "category": "mains",
+    "price": 22.99,
+    "description": "Tender pork ribs with house BBQ sauce",
+    "emoji": "🍖",
+    "image": ""
+  },
+  {
+    "id": 10,
+    "name": "Shrimp Tacos",
+    "category": "mains",
+    "price": 14.99,
+    "description": "Three soft tacos with grilled shrimp and slaw",
+    "emoji": "🦐",
+    "image": ""
+  },
+  {
+    "id": 11,
+    "name": "Chocolate Lava Cake",
+    "category": "desserts",
+    "price": 7.99,
+    "description": "Warm chocolate cake with molten center and ice cream",
+    "emoji": "🍰",
+    "image": ""
+  },
+  {
+    "id": 12,
+    "name": "Cheesecake",
+    "category": "desserts",
+    "price": 6.99,
+    "description": "New York style cheesecake with berry compote",
+    "emoji": "🍰",
+    "image": ""
+  },
+  {
+    "id": 13,
+    "name": "Ice Cream Sundae",
+    "category": "desserts",
+    "price": 5.99,
+    "description": "Three scoops with toppings and whipped cream",
+    "emoji": "🍨",
+    "image": ""
+  },
+  {
+    "id": 14,
+    "name": "Apple Pie",
+    "category": "desserts",
+    "price": 6.49,
+    "description": "Classic apple pie with vanilla ice cream",
+    "emoji": "🥧",
+    "image": ""
+  },
+  {
+    "id": 15,
+    "name": "Fresh Lemonade",
+    "category": "drinks",
+    "price": 3.99,
+    "description": "Freshly squeezed lemon juice with mint",
+    "emoji": "🍋",
+    "image": ""
+  },
+  {
+    "id": 16,
+    "name": "Iced Coffee",
+    "category": "drinks",
+    "price": 4.49,
+    "description": "Cold brew coffee with milk and ice",
+    "emoji": "☕",
+    "image": ""
+  },
+  {
+    "id": 17,
+    "name": "Mango Smoothie",
+    "category": "drinks",
+    "price": 5.99,
+    "description": "Tropical mango smoothie with yogurt",
+    "emoji": "🥭",
+    "image": ""
+  },
+  {
+    "id": 18,
+    "name": "Coca Cola",
+    "category": "drinks",
+    "price": 2.99,
+    "description": "Chilled soft drink",
+    "emoji": "🥤",
+    "image": ""
+  }
+]

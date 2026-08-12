@@ -1,0 +1,25 @@
+[
+  {
+    "id": 1786507147490,
+    "items": [
+      {
+        "id": 1,
+        "name": "Crispy Spring Rolls",
+        "price": 8.99,
+        "quantity": 1
+      },
+      {
+        "id": 2,
+        "name": "Chiken wings",
+        "price": 350,
+        "quantity": 1
+      }
+    ],
+    "total": 358.99,
+    "customerName": "sachij",
+    "customerPhone": "",
+    "tableNumber": "d1",
+    "status": "received",
+    "createdAt": "2026-08-12T03:59:07.490Z"
+  }
+]

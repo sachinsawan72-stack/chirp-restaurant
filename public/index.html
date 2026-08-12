@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chap House- Online Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 3em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 1.2em;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 25px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Search Box */
+        .search-box {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #searchInput {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 20px;
+            font-size: 1em;
+            border: 2px solid white;
+            border-radius: 30px;
+            outline: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            padding-bottom: 50px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .menu-item-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4em;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .menu-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-edit-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .menu-item-image:hover .image-edit-overlay {
+            opacity: 1;
+        }
+
+        .save-menu-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            padding: 12px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 999;
+        }
+
+        .save-menu-btn:hover {
+            background: #229954;
+        }
+
+        .menu-item-content {
+            padding: 20px;
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .menu-item h3 {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .menu-item-price {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .menu-item-category {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .menu-item-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: 600;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #5568d3;
+        }
+
+        /* Cart */
+        .cart-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .cart-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        #cartCount {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6em;
+            font-weight: bold;
+        }
+
+        .cart-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-sidebar.open {
+            right: 0;
+        }
+
+        .cart-header {
+            padding: 20px;
+            background: #667eea;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2em;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .cart-item-price {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .cart-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .qty-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cart-footer {
+            padding: 20px;
+            border-top: 2px solid #eee;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .checkout-btn:hover {
+            background: #229954;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            background: white;
+            border-radius: 15px;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        footer p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .cart-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🐦 Chap House By Movie Time Cinemas </h1>
+            <p class="tagline"> For All Day </p>
+            <p>📍 SLN Terminus Mall 3rd Floor Gachibowli Hyderabad Talangena 500032 </p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <button class="filter-btn active" data-category="all">All Items</button>
+            <button class="filter-btn" data-category="appetizers">Appetizers</button>
+            <button class="filter-btn" data-category="mains">Main Course</button>
+            <button class="filter-btn" data-category="desserts">Desserts</button>
+            <button class="filter-btn" data-category="drinks">Drinks</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search menu items...">
+        </div>
+
+        <div class="menu-grid" id="menuGrid">
+            <!-- Menu items will be dynamically inserted here -->
+        </div>
+
+        <div id="noResults" class="no-results" style="display: none;">
+            <p>No items found. Try a different search!</p>
+        </div>
+    </main>
+
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>Your Order</h2>
+            <button id="closeCart" class="close-btn">&times;</button>
+        </div>
+        <div id="cartItems" class="cart-items">
+            <p class="empty-cart">Your cart is empty</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">₹0.00</span>
+            </div>
+            <button id="checkoutBtn" class="checkout-btn">Checkout</button>
+        </div>
+    </div>
+
+    <button id="cartToggle" class="cart-toggle">
+        🛒 <span id="cartCount">0</span>
+    </button>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Chirp Restaurant. All rights reserved.</p>
+            <p>📍 At: SLN Terminus Mall 3rd Floor Gachibowli Hyderabad Talangena 500032 | 📞 +91 9515105007 </p>
+        </div>
+    </footer>
+
+    <script>
+        // Menu Data (fallback - agar API na milе to yeh dikhaya jayega)
+        let menuItems = [];
+        const FALLBACK_MENU = [
+            // Appetizers
+            {
+                id: 1,
+                name: "Crispy Spring Rolls",
+                category: "appetizers",
+                price: 8.99,
+                description: "Golden fried spring rolls with sweet chili sauce",
+                emoji: "🥟",
+                image: "https://www.google.com/search?q=crispy+spring+rolls&oq=Crispy+Spring+Rolls&gs_lcrp=EgZjaHJvbWUqCggAEAAY4wIYgAQyCggAEAAY4wIYgAQyBwgBEC4YgAQyBwgCEAAYgAQyBwgDEAAYgAQyBwgEEAAYgAQyBwgFEAAYgAQyBwgGEAAYgAQyBwgHEAAYgAQyBwgIEAAYgAQyBwgJEAAYgATSAQkyMzAwajBqMTWoAgiwAgHxBV5Z8ldYhQFY&sourceid=chrome&source=chrome.rb&ie=UTF-8#sv=CAMSVhozKhFpYy1pMlBvcE9SNEM0Q05QTTIOaTJQb3BPUjRDNENOUE06DnlmeEY1NngtWG5KX0ZNIAQqGwoEc3ZpbRIRaWMtaTJQb3BPUjRDNENOUE0YATABGAcg36O2oQY"
+            },
+            {
+                id: 2,
+                name: "Buffalo Wings",
+                category: "appetizers",
+                price: 12.99,
+                description: "Spicy chicken wings with ranch dressing",
+                emoji: "🍗",
+                image: ""
+            },
+            {
+                id: 3,
+                name: "Mozzarella Sticks",
+                category: "appetizers",
+                price: 9.99,
+                description: "Breaded mozzarella with marinara sauce",
+                emoji: "🧀",
+                image: ""
+            },
+            {
+                id: 4,
+                name: "Loaded Nachos",
+                category: "appetizers",
+                price: 11.99,
+                description: "Tortilla chips with cheese, jalapeños, and sour cream",
+                emoji: "🌮",
+                image: ""
+            },
+
+            // Main Course
+            {
+                id: 5,
+                name: "Grilled Salmon",
+                category: "mains",
+                price: 24.99,
+                description: "Fresh Atlantic salmon with roasted vegetables",
+                emoji: "🐟",
+                image: ""
+            },
+            {
+                id: 6,
+                name: "Beef Burger Deluxe",
+                category: "mains",
+                price: 15.99,
+                description: "Angus beef patty with bacon, cheese, and fries",
+                emoji: "🍔",
+                image: ""
+            },
+            {
+                id: 7,
+                name: "Chicken Alfredo Pasta",
+                category: "mains",
+                price: 18.99,
+                description: "Creamy fettuccine with grilled chicken",
+                emoji: "🍝",
+                image: ""
+            },
+            {
+                id: 8,
+                name: "Veggie Supreme Pizza",
+                category: "mains",
+                price: 16.99,
+                description: "12-inch pizza with fresh vegetables and mozzarella",
+                emoji: "🍕",
+                image: ""
+            },
+            {
+                id: 9,
+                name: "BBQ Ribs",
+                category: "mains",
+                price: 22.99,
+                description: "Tender pork ribs with house BBQ sauce",
+                emoji: "🍖",
+                image: ""
+            },
+            {
+                id: 10,
+                name: "Shrimp Tacos",
+                category: "mains",
+                price: 14.99,
+                description: "Three soft tacos with grilled shrimp and slaw",
+                emoji: "🦐",
+                image: ""
+            },
+
+            // Desserts
+            {
+                id: 11,
+                name: "Chocolate Lava Cake",
+                category: "desserts",
+                price: 7.99,
+                description: "Warm chocolate cake with molten center and ice cream",
+                emoji: "🍰",
+                image: ""
+            },
+            {
+                id: 12,
+                name: "Cheesecake",
+                category: "desserts",
+                price: 6.99,
+                description: "New York style cheesecake with berry compote",
+                emoji: "🍰",
+                image: ""
+            },
+            {
+                id: 13,
+                name: "Ice Cream Sundae",
+                category: "desserts",
+                price: 5.99,
+                description: "Three scoops with toppings and whipped cream",
+                emoji: "🍨",
+                image: ""
+            },
+            {
+                id: 14,
+                name: "Apple Pie",
+                category: "desserts",
+                price: 6.49,
+                description: "Classic apple pie with vanilla ice cream",
+                emoji: "🥧",
+                image: ""
+            },
+
+            // Drinks
+            {
+                id: 15,
+                name: "Fresh Lemonade",
+                category: "drinks",
+                price: 3.99,
+                description: "Freshly squeezed lemon juice with mint",
+                emoji: "🍋",
+                image: ""
+            },
+            {
+                id: 16,
+                name: "Iced Coffee",
+                category: "drinks",
+                price: 4.49,
+                description: "Cold brew coffee with milk and ice",
+                emoji: "☕",
+                image: ""
+            },
+            {
+                id: 17,
+                name: "Mango Smoothie",
+                category: "drinks",
+                price: 5.99,
+                description: "Tropical mango smoothie with yogurt",
+                emoji: "🥭",
+                image: ""
+            },
+            {
+                id: 18,
+                name: "Coca Cola",
+                category: "drinks",
+                price: 2.99,
+                description: "Chilled soft drink",
+                emoji: "🥤",
+                image: ""
+            }
+        ];
+
+        // API base - same origin (backend jo frontend ko serve kar raha hai)
+        const API_BASE = '';
+
+        // Cart state
+        let cart = [];
+
+        // Menu backend se load karo
+        async function loadMenu() {
+            try {
+                const res = await fetch(`${API_BASE}/api/menu`);
+                if (!res.ok) throw new Error('Menu load nahi hua');
+                menuItems = await res.json();
+            } catch (err) {
+                console.error('API se menu nahi mila, fallback data use ho raha hai:', err);
+                menuItems = FALLBACK_MENU;
+            }
+            displayMenuItems(menuItems);
+        }
+
+        // DOM Elements
+        const menuGrid = document.getElementById('menuGrid');
+        const searchInput = document.getElementById('searchInput');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const cartSidebar = document.getElementById('cartSidebar');
+        const cartToggle = document.getElementById('cartToggle');
+        const closeCart = document.getElementById('closeCart');
+        const cartItems = document.getElementById('cartItems');
+        const cartTotal = document.getElementById('cartTotal');
+        const cartCount = document.getElementById('cartCount');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const noResults = document.getElementById('noResults');
+
+        // Initialize
+        loadMenu();
+
+        // Display menu items
+        function displayMenuItems(items) {
+            if (items.length === 0) {
+                menuGrid.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            menuGrid.style.display = 'grid';
+            noResults.style.display = 'none';
+
+            menuGrid.innerHTML = items.map(item => `
+                <div class="menu-item" data-category="${item.category}">
+                    <div class="menu-item-image" onclick="editImage(${item.id})">
+                        ${item.image
+                            ? `<img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.parentElement.innerHTML='${item.emoji}';">`
+                            : item.emoji}
+                        <div class="image-edit-overlay">📷 Click to paste image link</div>
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3>${item.name}</h3>
+                            <span class="menu-item-price">₹${item.price.toFixed(2)}</span>
+                        </div>
+                        <span class="menu-item-category">${item.category}</span>
+                        <p class="menu-item-description">${item.description}</p>
+                        <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Click an item's image to paste a link (sirf admin ke liye - admin key chahiye)
+        async function editImage(itemId) {
+            const item = menuItems.find(i => i.id === itemId);
+            let adminKey = sessionStorage.getItem('chirpAdminKey');
+            if (!adminKey) {
+                adminKey = prompt('Admin key daalo image edit karne ke liye:');
+                if (!adminKey) return;
+                sessionStorage.setItem('chirpAdminKey', adminKey);
+            }
+
+            const url = prompt(`Paste image link for "${item.name}":`, item.image || '');
+            if (url === null) return; // cancelled
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/menu/${itemId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': adminKey
+                    },
+                    body: JSON.stringify({ image: url.trim() })
+                });
+                if (res.status === 401) {
+                    alert('Admin key galat hai.');
+                    sessionStorage.removeItem('chirpAdminKey');
+                    return;
+                }
+                if (!res.ok) throw new Error('Update fail hua');
+                const updated = await res.json();
+                item.image = updated.image;
+
+                // Re-render current filtered/search view
+                const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+                const searchTerm = searchInput.value.toLowerCase();
+                let filtered = activeCategory === 'all' ? menuItems : menuItems.filter(i => i.category === activeCategory);
+                filtered = filtered.filter(i =>
+                    i.name.toLowerCase().includes(searchTerm) ||
+                    i.description.toLowerCase().includes(searchTerm)
+                );
+                displayMenuItems(filtered);
+            } catch (err) {
+                alert('Image update nahi ho paya: ' + err.message);
+            }
+        }
+
+        // Filter by category
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+
+                // Update active button
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Filter items
+                const filtered = category === 'all'
+                    ? menuItems
+                    : menuItems.filter(item => item.category === category);
+
+                displayMenuItems(filtered);
+                searchInput.value = '';
+            });
+        });
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+
+            let filtered = activeCategory === 'all'
+                ? menuItems
+                : menuItems.filter(item => item.category === activeCategory);
+
+            filtered = filtered.filter(item =>
+                item.name.toLowerCase().includes(searchTerm) ||
+                item.description.toLowerCase().includes(searchTerm)
+            );
+
+            displayMenuItems(filtered);
+        });
+
+        // Add to cart
+        function addToCart(itemId) {
+            const item = menuItems.find(i => i.id === itemId);
+            const existingItem = cart.find(i => i.id === itemId);
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...item, quantity: 1 });
+            }
+
+            updateCart();
+
+            // Visual feedback
+            cartToggle.style.transform = 'scale(1.2)';
+            setTimeout(() => {
+                cartToggle.style.transform = 'scale(1)';
+            }, 200);
+        }
+
+        // Update cart
+        function updateCart() {
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p class="empty-cart">Your cart is empty</p>';
+                cartTotal.textContent = '₹0.00';
+                cartCount.textContent = '0';
+                return;
+            }
+
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">₹${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="cart-item-controls">
+                        <button class="qty-btn" onclick="changeQuantity(${item.id}, -1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="qty-btn" onclick="changeQuantity(${item.id}, 1)">+</button>
+                        <button class="remove-btn" onclick="removeFromCart(${item.id})">×</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotal.textContent = `₹${total.toFixed(2)}`;
+
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalItems;
+        }
+
+        // Change quantity
+        function changeQuantity(itemId, change) {
+            const item = cart.find(i => i.id === itemId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(itemId);
+                } else {
+                    updateCart();
+                }
+            }
+        }
+
+        // Remove from cart
+        function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            updateCart();
+        }
+
+        // Toggle cart sidebar
+        cartToggle.addEventListener('click', () => {
+            cartSidebar.classList.add('open');
+        });
+
+        closeCart.addEventListener('click', () => {
+            cartSidebar.classList.remove('open');
+        });
+
+        // Checkout - order backend ko bhejna
+        checkoutBtn.addEventListener('click', async () => {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            const tableNumber = prompt('Apna Table Number daalo (optional):', '');
+            const customerName = prompt('Apna naam daalo (optional):', '');
+
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = 'Placing order...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
+                        customerName,
+                        tableNumber
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert('Order fail ho gaya: ' + (data.error || 'Unknown error'));
+                    return;
+                }
+
+                alert(`Order placed successfully!\nOrder ID: ${data.order.id}\nTotal: ₹${data.order.total.toFixed(2)}\n\nThank you for dining with Chirp Restaurant! 🐦`);
+
+                cart = [];
+                updateCart();
+                cartSidebar.classList.remove('open');
+            } catch (err) {
+                alert('Order bhejne me error aayi. Internet check karo aur phir try karo.');
+            } finally {
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = 'Checkout';
+            }
+        });
+
+        // Close cart when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!cartSidebar.contains(e.target) && !cartToggle.contains(e.target)) {
+                cartSidebar.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>

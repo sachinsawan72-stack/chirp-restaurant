@@ -1,0 +1,7 @@
+node_modules/
+.env
+*.log
+
+# Uploaded images ko git me track na karo (bas folder structure rakho)
+public/uploads/*
+!public/uploads/.gitkeep
