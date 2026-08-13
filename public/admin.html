@@ -34,7 +34,8 @@
     .tab-content.active { display:block; }
 
     .menu-image-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
-    .menu-image-card { background:white; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center; }
+    .menu-image-card { background:white; border-radius:12px; padding:14px; box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center; position:relative; }
+    .menu-image-card.is-unavailable { opacity:0.6; }
     .menu-image-card img, .menu-image-card .emoji-preview {
         width:100%; height:130px; object-fit:cover; border-radius:8px; margin-bottom:10px; background:#f0f0f5;
         display:flex; align-items:center; justify-content:center; font-size:3em;
@@ -44,12 +45,22 @@
     .menu-image-card button { width:100%; font-size:0.85em; padding:8px; margin-top:6px; }
     .upload-status { font-size:0.8em; margin-top:6px; min-height:16px; }
 
+    .avail-badge {
+        position:absolute; top:10px; right:10px; padding:4px 10px; border-radius:12px;
+        font-size:0.75em; font-weight:700;
+    }
+    .avail-yes { background:#d1e7dd; color:#0f5132; }
+    .avail-no { background:#f8d7da; color:#842029; }
+
     .edit-fields { text-align:left; margin-top:10px; }
     .edit-fields label { font-size:0.75em; color:#888; display:block; margin-top:6px; }
     .edit-fields input, .edit-fields select, .edit-fields textarea {
         width:100%; font-size:0.85em; padding:6px; margin-top:2px;
     }
     .edit-fields textarea { resize:vertical; min-height:40px; }
+    .avail-toggle-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+    .avail-toggle-row input[type="checkbox"] { width:auto; }
+    .avail-toggle-row label { font-size:0.85em; color:#333; margin:0; }
     .btn-row { display:flex; gap:6px; margin-top:8px; }
     .btn-row button { flex:1; }
     .btn-save { background:#27ae60; }
@@ -64,7 +75,9 @@
     .add-item-card h3 { color:#667eea; margin-bottom:12px; }
     .add-item-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:10px; }
     .add-item-grid input, .add-item-grid select, .add-item-grid textarea { width:100%; }
-
+    #newCategoryCustom { margin-top:8px; display:none; }
+    .add-avail-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+    .add-avail-row input[type="checkbox"] { width:auto; }
 
 </style>
 </head>
@@ -91,16 +104,22 @@
             <h3>➕ Naya Item Add Karo</h3>
             <div class="add-item-grid">
                 <input type="text" id="newName" placeholder="Item ka naam">
-                <select id="newCategory">
+                <select id="newCategory" onchange="toggleNewCategoryInput()">
                     <option value="appetizers">Appetizers</option>
                     <option value="mains">Main Course</option>
                     <option value="desserts">Desserts</option>
                     <option value="drinks">Drinks</option>
+                    <option value="__custom__">+ Nayi Category Banao...</option>
                 </select>
                 <input type="number" id="newPrice" placeholder="Price (₹)" step="0.01">
                 <input type="text" id="newEmoji" placeholder="Emoji (e.g. 🍕)">
             </div>
+            <input type="text" id="newCategoryCustom" placeholder="Nayi category ka naam type karo">
             <textarea id="newDescription" placeholder="Description" rows="2" style="width:100%; margin-bottom:10px;"></textarea>
+            <div class="add-avail-row">
+                <input type="checkbox" id="newAvailable" checked>
+                <label for="newAvailable">Item abhi available hai (customer select kar sakta hai)</label>
+            </div>
             <button class="btn-save" onclick="addNewItem()">➕ Add Item</button>
         </div>
 
@@ -110,6 +129,8 @@
 
 <script>
 let autoTimer = null;
+// Track categories seen so far (default + any custom ones already in the menu)
+let knownCategories = ['appetizers', 'mains', 'desserts', 'drinks'];
 
 function savedKey() {
     return sessionStorage.getItem('chirpAdminKey') || '';
@@ -184,14 +205,40 @@ function switchTab(tab) {
     document.getElementById(tab === 'orders' ? 'ordersTab' : 'imagesTab').classList.add('active');
 }
 
+// ---------- Add-item category dropdown: show/hide free-text box ----------
+function toggleNewCategoryInput() {
+    const select = document.getElementById('newCategory');
+    const customInput = document.getElementById('newCategoryCustom');
+    customInput.style.display = select.value === '__custom__' ? 'block' : 'none';
+}
+
+// Keep the "known categories" list (used to build both add-item and per-item
+// edit dropdowns) in sync with whatever categories already exist in the menu,
+// including any custom ones created earlier.
+function refreshKnownCategories(menu) {
+    const fromMenu = [...new Set(menu.map(i => i.category))];
+    fromMenu.forEach(c => { if (!knownCategories.includes(c)) knownCategories.push(c); });
+}
+
+function categoryOptionsHtml(selected) {
+    return knownCategories.map(c =>
+        `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`
+    ).join('') + `<option value="__custom__">+ Nayi Category Banao...</option>`;
+}
+
 // ---------- Menu Images + Edit ----------
 async function loadMenuImages() {
     const res = await fetch('/api/menu');
     const menu = await res.json();
+    refreshKnownCategories(menu);
+
     const grid = document.getElementById('menuImageGrid');
 
-    grid.innerHTML = menu.map(item => `
-        <div class="menu-image-card" id="card-${item.id}">
+    grid.innerHTML = menu.map(item => {
+        const isAvailable = item.available !== false;
+        return `
+        <div class="menu-image-card ${isAvailable ? '' : 'is-unavailable'}" id="card-${item.id}">
+            <span class="avail-badge ${isAvailable ? 'avail-yes' : 'avail-no'}">${isAvailable ? 'Available' : 'Unavailable'}</span>
             ${item.image
                 ? `<img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.outerHTML='<div class=\\'emoji-preview\\'>${item.emoji}</div>';">`
                 : `<div class="emoji-preview">${item.emoji}</div>`}
@@ -205,12 +252,10 @@ async function loadMenuImages() {
                 <input type="text" id="name-${item.id}" value="${item.name.replace(/"/g, '&quot;')}">
 
                 <label>Category</label>
-                <select id="category-${item.id}">
-                    <option value="appetizers" ${item.category==='appetizers'?'selected':''}>Appetizers</option>
-                    <option value="mains" ${item.category==='mains'?'selected':''}>Main Course</option>
-                    <option value="desserts" ${item.category==='desserts'?'selected':''}>Desserts</option>
-                    <option value="drinks" ${item.category==='drinks'?'selected':''}>Drinks</option>
+                <select id="category-${item.id}" onchange="toggleEditCategoryInput(${item.id})">
+                    ${categoryOptionsHtml(item.category)}
                 </select>
+                <input type="text" id="categoryCustom-${item.id}" placeholder="Nayi category ka naam" style="display:none; margin-top:4px;">
 
                 <label>Price (₹)</label>
                 <input type="number" id="price-${item.id}" value="${item.price}" step="0.01">
@@ -218,24 +263,43 @@ async function loadMenuImages() {
                 <label>Description</label>
                 <textarea id="desc-${item.id}">${item.description}</textarea>
 
+                <div class="avail-toggle-row">
+                    <input type="checkbox" id="available-${item.id}" ${isAvailable ? 'checked' : ''}>
+                    <label for="available-${item.id}">Item available hai (customer isse select kar sake)</label>
+                </div>
+
                 <div class="btn-row">
                     <button class="btn-save" onclick="saveItemDetails(${item.id})">💾 Save</button>
                     <button class="btn-delete" onclick="deleteItem(${item.id})">🗑️ Delete</button>
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
+}
+
+function toggleEditCategoryInput(itemId) {
+    const select = document.getElementById(`category-${itemId}`);
+    const customInput = document.getElementById(`categoryCustom-${itemId}`);
+    customInput.style.display = select.value === '__custom__' ? 'block' : 'none';
 }
 
 async function saveItemDetails(itemId) {
     const key = savedKey();
     if (!key) { alert('Pehle admin key daal kar Unlock karo.'); return; }
 
+    const categorySelect = document.getElementById(`category-${itemId}`).value;
+    const category = categorySelect === '__custom__'
+        ? document.getElementById(`categoryCustom-${itemId}`).value.trim().toLowerCase()
+        : categorySelect;
+
+    if (!category) { alert('Category naam khali nahi ho sakta.'); return; }
+
     const body = {
         name: document.getElementById(`name-${itemId}`).value,
-        category: document.getElementById(`category-${itemId}`).value,
+        category,
         price: document.getElementById(`price-${itemId}`).value,
-        description: document.getElementById(`desc-${itemId}`).value
+        description: document.getElementById(`desc-${itemId}`).value,
+        available: document.getElementById(`available-${itemId}`).checked
     };
 
     const res = await fetch(`/api/admin/menu/${itemId}`, {
@@ -249,6 +313,8 @@ async function saveItemDetails(itemId) {
         alert('Save nahi hua: ' + (data.error || 'Unknown error'));
         return;
     }
+
+    if (!knownCategories.includes(category)) knownCategories.push(category);
 
     alert('✅ Item update ho gaya!');
     loadMenuImages();
@@ -281,12 +347,20 @@ async function addNewItem() {
     const name = document.getElementById('newName').value.trim();
     if (!name) { alert('Item ka naam daalo.'); return; }
 
+    const categorySelect = document.getElementById('newCategory').value;
+    const category = categorySelect === '__custom__'
+        ? document.getElementById('newCategoryCustom').value.trim().toLowerCase()
+        : categorySelect;
+
+    if (!category) { alert('Category naam khali nahi ho sakta.'); return; }
+
     const body = {
         name,
-        category: document.getElementById('newCategory').value,
+        category,
         price: document.getElementById('newPrice').value || 0,
         emoji: document.getElementById('newEmoji').value.trim() || '🍽️',
-        description: document.getElementById('newDescription').value.trim()
+        description: document.getElementById('newDescription').value.trim(),
+        available: document.getElementById('newAvailable').checked
     };
 
     const res = await fetch('/api/admin/menu', {
@@ -301,11 +375,17 @@ async function addNewItem() {
         return;
     }
 
+    if (!knownCategories.includes(category)) knownCategories.push(category);
+
     // form clear karo
     document.getElementById('newName').value = '';
     document.getElementById('newPrice').value = '';
     document.getElementById('newEmoji').value = '';
     document.getElementById('newDescription').value = '';
+    document.getElementById('newCategoryCustom').value = '';
+    document.getElementById('newCategoryCustom').style.display = 'none';
+    document.getElementById('newCategory').value = 'appetizers';
+    document.getElementById('newAvailable').checked = true;
 
     alert('✅ Naya item add ho gaya!');
     loadMenuImages();
