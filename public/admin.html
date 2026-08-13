@@ -143,7 +143,7 @@ async function loadOrders() {
     if (!key) { alert('Admin key daalo'); return; }
     sessionStorage.setItem('chirpAdminKey', key);
 
-    const res = await fetch('/api/admin/orders', { headers: { 'x-admin-key': key } });
+    const res = await fetch('/api/admin/orders', { headers: { 'x-admin-key': key }, cache: 'no-store' });
     if (res.status === 401) {
         alert('Admin key galat hai.');
         return;
@@ -228,7 +228,7 @@ function categoryOptionsHtml(selected) {
 
 // ---------- Menu Images + Edit ----------
 async function loadMenuImages() {
-    const res = await fetch('/api/menu');
+    const res = await fetch(`/api/menu?t=${Date.now()}`, { cache: 'no-store' });
     const menu = await res.json();
     refreshKnownCategories(menu);
 
@@ -305,6 +305,7 @@ async function saveItemDetails(itemId) {
     const res = await fetch(`/api/admin/menu/${itemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-admin-key': key },
+        cache: 'no-store',
         body: JSON.stringify(body)
     });
 
