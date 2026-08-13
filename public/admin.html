@@ -220,6 +220,15 @@ function refreshKnownCategories(menu) {
     fromMenu.forEach(c => { if (!knownCategories.includes(c)) knownCategories.push(c); });
 }
 
+// Same robust check as customer page: backend might return available as
+// boolean false, number 0, or string "0"/"false" — all should count as unavailable.
+function isItemAvailable(item) {
+    const v = item.available;
+    if (v === undefined || v === null) return true;
+    if (v === false || v === 0 || v === '0' || v === 'false') return false;
+    return true;
+}
+
 function categoryOptionsHtml(selected) {
     return knownCategories.map(c =>
         `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`
@@ -235,7 +244,7 @@ async function loadMenuImages() {
     const grid = document.getElementById('menuImageGrid');
 
     grid.innerHTML = menu.map(item => {
-        const isAvailable = item.available !== false;
+        const isAvailable = isItemAvailable(item);
         return `
         <div class="menu-image-card ${isAvailable ? '' : 'is-unavailable'}" id="card-${item.id}">
             <span class="avail-badge ${isAvailable ? 'avail-yes' : 'avail-no'}">${isAvailable ? 'Available' : 'Unavailable'}</span>
