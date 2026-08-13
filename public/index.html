@@ -69,6 +69,7 @@
             font-size: 1em;
             transition: all 0.3s ease;
             font-weight: 600;
+            text-transform: capitalize;
         }
 
         .filter-btn:hover {
@@ -120,6 +121,10 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
 
+        .menu-item.unavailable {
+            opacity: 0.65;
+        }
+
         .menu-item-image {
             width: 100%;
             height: 200px;
@@ -130,7 +135,6 @@
             font-size: 4em;
             position: relative;
             overflow: hidden;
-            cursor: pointer;
         }
 
         .menu-item-image img {
@@ -140,44 +144,18 @@
             display: block;
         }
 
-        .image-edit-overlay {
+        .unavailable-badge {
             position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.55);
+            top: 12px;
+            right: 12px;
+            background: #e74c3c;
             color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .menu-item-image:hover .image-edit-overlay {
-            opacity: 1;
-        }
-
-        .save-menu-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            padding: 12px 20px;
-            background: #27ae60;
-            color: white;
-            border: none;
-            border-radius: 30px;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 999;
-        }
-
-        .save-menu-btn:hover {
-            background: #229954;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
 
         .menu-item-content {
@@ -211,6 +189,7 @@
             font-size: 0.85em;
             color: #666;
             margin-bottom: 10px;
+            text-transform: capitalize;
         }
 
         .menu-item-description {
@@ -234,6 +213,11 @@
 
         .add-to-cart-btn:hover {
             background: #5568d3;
+        }
+
+        .add-to-cart-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
         }
 
         /* Cart */
@@ -452,12 +436,9 @@
     </header>
 
     <nav>
-        <div class="container">
+        <div class="container" id="filterContainer">
             <button class="filter-btn active" data-category="all">All Items</button>
-            <button class="filter-btn" data-category="appetizers">Appetizers</button>
-            <button class="filter-btn" data-category="mains">Main Course</button>
-            <button class="filter-btn" data-category="desserts">Desserts</button>
-            <button class="filter-btn" data-category="drinks">Drinks</button>
+            <!-- category buttons are added dynamically based on live menu data -->
         </div>
     </nav>
 
@@ -508,174 +489,30 @@
         let menuItems = [];
         const FALLBACK_MENU = [
             // Appetizers
-            {
-                id: 1,
-                name: "Crispy Spring Rolls",
-                category: "appetizers",
-                price: 8.99,
-                description: "Golden fried spring rolls with sweet chili sauce",
-                emoji: "🥟",
-                image: "https://www.google.com/search?q=crispy+spring+rolls&oq=Crispy+Spring+Rolls&gs_lcrp=EgZjaHJvbWUqCggAEAAY4wIYgAQyCggAEAAY4wIYgAQyBwgBEC4YgAQyBwgCEAAYgAQyBwgDEAAYgAQyBwgEEAAYgAQyBwgFEAAYgAQyBwgGEAAYgAQyBwgHEAAYgAQyBwgIEAAYgAQyBwgJEAAYgATSAQkyMzAwajBqMTWoAgiwAgHxBV5Z8ldYhQFY&sourceid=chrome&source=chrome.rb&ie=UTF-8#sv=CAMSVhozKhFpYy1pMlBvcE9SNEM0Q05QTTIOaTJQb3BPUjRDNENOUE06DnlmeEY1NngtWG5KX0ZNIAQqGwoEc3ZpbRIRaWMtaTJQb3BPUjRDNENOUE0YATABGAcg36O2oQY"
-            },
-            {
-                id: 2,
-                name: "Buffalo Wings",
-                category: "appetizers",
-                price: 12.99,
-                description: "Spicy chicken wings with ranch dressing",
-                emoji: "🍗",
-                image: ""
-            },
-            {
-                id: 3,
-                name: "Mozzarella Sticks",
-                category: "appetizers",
-                price: 9.99,
-                description: "Breaded mozzarella with marinara sauce",
-                emoji: "🧀",
-                image: ""
-            },
-            {
-                id: 4,
-                name: "Loaded Nachos",
-                category: "appetizers",
-                price: 11.99,
-                description: "Tortilla chips with cheese, jalapeños, and sour cream",
-                emoji: "🌮",
-                image: ""
-            },
+            { id: 1, name: "Crispy Spring Rolls", category: "appetizers", price: 8.99, description: "Golden fried spring rolls with sweet chili sauce", emoji: "🥟", image: "", available: true },
+            { id: 2, name: "Buffalo Wings", category: "appetizers", price: 12.99, description: "Spicy chicken wings with ranch dressing", emoji: "🍗", image: "", available: true },
+            { id: 3, name: "Mozzarella Sticks", category: "appetizers", price: 9.99, description: "Breaded mozzarella with marinara sauce", emoji: "🧀", image: "", available: true },
+            { id: 4, name: "Loaded Nachos", category: "appetizers", price: 11.99, description: "Tortilla chips with cheese, jalapeños, and sour cream", emoji: "🌮", image: "", available: true },
 
             // Main Course
-            {
-                id: 5,
-                name: "Grilled Salmon",
-                category: "mains",
-                price: 24.99,
-                description: "Fresh Atlantic salmon with roasted vegetables",
-                emoji: "🐟",
-                image: ""
-            },
-            {
-                id: 6,
-                name: "Beef Burger Deluxe",
-                category: "mains",
-                price: 15.99,
-                description: "Angus beef patty with bacon, cheese, and fries",
-                emoji: "🍔",
-                image: ""
-            },
-            {
-                id: 7,
-                name: "Chicken Alfredo Pasta",
-                category: "mains",
-                price: 18.99,
-                description: "Creamy fettuccine with grilled chicken",
-                emoji: "🍝",
-                image: ""
-            },
-            {
-                id: 8,
-                name: "Veggie Supreme Pizza",
-                category: "mains",
-                price: 16.99,
-                description: "12-inch pizza with fresh vegetables and mozzarella",
-                emoji: "🍕",
-                image: ""
-            },
-            {
-                id: 9,
-                name: "BBQ Ribs",
-                category: "mains",
-                price: 22.99,
-                description: "Tender pork ribs with house BBQ sauce",
-                emoji: "🍖",
-                image: ""
-            },
-            {
-                id: 10,
-                name: "Shrimp Tacos",
-                category: "mains",
-                price: 14.99,
-                description: "Three soft tacos with grilled shrimp and slaw",
-                emoji: "🦐",
-                image: ""
-            },
+            { id: 5, name: "Grilled Salmon", category: "mains", price: 24.99, description: "Fresh Atlantic salmon with roasted vegetables", emoji: "🐟", image: "", available: true },
+            { id: 6, name: "Beef Burger Deluxe", category: "mains", price: 15.99, description: "Angus beef patty with bacon, cheese, and fries", emoji: "🍔", image: "", available: true },
+            { id: 7, name: "Chicken Alfredo Pasta", category: "mains", price: 18.99, description: "Creamy fettuccine with grilled chicken", emoji: "🍝", image: "", available: true },
+            { id: 8, name: "Veggie Supreme Pizza", category: "mains", price: 16.99, description: "12-inch pizza with fresh vegetables and mozzarella", emoji: "🍕", image: "", available: true },
+            { id: 9, name: "BBQ Ribs", category: "mains", price: 22.99, description: "Tender pork ribs with house BBQ sauce", emoji: "🍖", image: "", available: true },
+            { id: 10, name: "Shrimp Tacos", category: "mains", price: 14.99, description: "Three soft tacos with grilled shrimp and slaw", emoji: "🦐", image: "", available: true },
 
             // Desserts
-            {
-                id: 11,
-                name: "Chocolate Lava Cake",
-                category: "desserts",
-                price: 7.99,
-                description: "Warm chocolate cake with molten center and ice cream",
-                emoji: "🍰",
-                image: ""
-            },
-            {
-                id: 12,
-                name: "Cheesecake",
-                category: "desserts",
-                price: 6.99,
-                description: "New York style cheesecake with berry compote",
-                emoji: "🍰",
-                image: ""
-            },
-            {
-                id: 13,
-                name: "Ice Cream Sundae",
-                category: "desserts",
-                price: 5.99,
-                description: "Three scoops with toppings and whipped cream",
-                emoji: "🍨",
-                image: ""
-            },
-            {
-                id: 14,
-                name: "Apple Pie",
-                category: "desserts",
-                price: 6.49,
-                description: "Classic apple pie with vanilla ice cream",
-                emoji: "🥧",
-                image: ""
-            },
+            { id: 11, name: "Chocolate Lava Cake", category: "desserts", price: 7.99, description: "Warm chocolate cake with molten center and ice cream", emoji: "🍰", image: "", available: true },
+            { id: 12, name: "Cheesecake", category: "desserts", price: 6.99, description: "New York style cheesecake with berry compote", emoji: "🍰", image: "", available: true },
+            { id: 13, name: "Ice Cream Sundae", category: "desserts", price: 5.99, description: "Three scoops with toppings and whipped cream", emoji: "🍨", image: "", available: true },
+            { id: 14, name: "Apple Pie", category: "desserts", price: 6.49, description: "Classic apple pie with vanilla ice cream", emoji: "🥧", image: "", available: true },
 
             // Drinks
-            {
-                id: 15,
-                name: "Fresh Lemonade",
-                category: "drinks",
-                price: 3.99,
-                description: "Freshly squeezed lemon juice with mint",
-                emoji: "🍋",
-                image: ""
-            },
-            {
-                id: 16,
-                name: "Iced Coffee",
-                category: "drinks",
-                price: 4.49,
-                description: "Cold brew coffee with milk and ice",
-                emoji: "☕",
-                image: ""
-            },
-            {
-                id: 17,
-                name: "Mango Smoothie",
-                category: "drinks",
-                price: 5.99,
-                description: "Tropical mango smoothie with yogurt",
-                emoji: "🥭",
-                image: ""
-            },
-            {
-                id: 18,
-                name: "Coca Cola",
-                category: "drinks",
-                price: 2.99,
-                description: "Chilled soft drink",
-                emoji: "🥤",
-                image: ""
-            }
+            { id: 15, name: "Fresh Lemonade", category: "drinks", price: 3.99, description: "Freshly squeezed lemon juice with mint", emoji: "🍋", image: "", available: true },
+            { id: 16, name: "Iced Coffee", category: "drinks", price: 4.49, description: "Cold brew coffee with milk and ice", emoji: "☕", image: "", available: true },
+            { id: 17, name: "Mango Smoothie", category: "drinks", price: 5.99, description: "Tropical mango smoothie with yogurt", emoji: "🥭", image: "", available: true },
+            { id: 18, name: "Coca Cola", category: "drinks", price: 2.99, description: "Chilled soft drink", emoji: "🥤", image: "", available: true }
         ];
 
         // API base - same origin (backend jo frontend ko serve kar raha hai)
@@ -694,13 +531,14 @@
                 console.error('API se menu nahi mila, fallback data use ho raha hai:', err);
                 menuItems = FALLBACK_MENU;
             }
+            buildCategoryFilters();
             displayMenuItems(menuItems);
         }
 
         // DOM Elements
         const menuGrid = document.getElementById('menuGrid');
         const searchInput = document.getElementById('searchInput');
-        const filterBtns = document.querySelectorAll('.filter-btn');
+        const filterContainer = document.getElementById('filterContainer');
         const cartSidebar = document.getElementById('cartSidebar');
         const cartToggle = document.getElementById('cartToggle');
         const closeCart = document.getElementById('closeCart');
@@ -713,7 +551,29 @@
         // Initialize
         loadMenu();
 
-        // Display menu items
+        // Build category filter buttons dynamically from whatever categories exist
+        // in the live menu data (so new categories added from admin panel show up
+        // automatically without editing this file).
+        function buildCategoryFilters() {
+            const categories = [...new Set(menuItems.map(i => i.category))];
+
+            filterContainer.innerHTML = `<button class="filter-btn active" data-category="all">All Items</button>` +
+                categories.map(cat => `<button class="filter-btn" data-category="${cat}">${cat}</button>`).join('');
+
+            filterContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const category = btn.dataset.category;
+                    const filtered = category === 'all' ? menuItems : menuItems.filter(item => item.category === category);
+                    displayMenuItems(filtered);
+                    searchInput.value = '';
+                });
+            });
+        }
+
+        // Display menu items (view-only: no image editing here, that's admin-only)
         function displayMenuItems(items) {
             if (items.length === 0) {
                 menuGrid.style.display = 'none';
@@ -724,13 +584,15 @@
             menuGrid.style.display = 'grid';
             noResults.style.display = 'none';
 
-            menuGrid.innerHTML = items.map(item => `
-                <div class="menu-item" data-category="${item.category}">
-                    <div class="menu-item-image" onclick="editImage(${item.id})">
+            menuGrid.innerHTML = items.map(item => {
+                const isAvailable = item.available !== false; // default true if missing
+                return `
+                <div class="menu-item ${isAvailable ? '' : 'unavailable'}" data-category="${item.category}">
+                    <div class="menu-item-image">
                         ${item.image
                             ? `<img src="${item.image}" alt="${item.name}" onerror="this.onerror=null;this.parentElement.innerHTML='${item.emoji}';">`
                             : item.emoji}
-                        <div class="image-edit-overlay">📷 Click to paste image link</div>
+                        ${isAvailable ? '' : '<span class="unavailable-badge">Not Available</span>'}
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -739,82 +601,18 @@
                         </div>
                         <span class="menu-item-category">${item.category}</span>
                         <p class="menu-item-description">${item.description}</p>
-                        <button class="add-to-cart-btn" onclick="addToCart(${item.id})">
-                            Add to Cart
+                        <button class="add-to-cart-btn" onclick="addToCart(${item.id})" ${isAvailable ? '' : 'disabled'}>
+                            ${isAvailable ? 'Add to Cart' : 'Currently Unavailable'}
                         </button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
-
-        // Click an item's image to paste a link (sirf admin ke liye - admin key chahiye)
-        async function editImage(itemId) {
-            const item = menuItems.find(i => i.id === itemId);
-            let adminKey = sessionStorage.getItem('chirpAdminKey');
-            if (!adminKey) {
-                adminKey = prompt('Admin key daalo image edit karne ke liye:');
-                if (!adminKey) return;
-                sessionStorage.setItem('chirpAdminKey', adminKey);
-            }
-
-            const url = prompt(`Paste image link for "${item.name}":`, item.image || '');
-            if (url === null) return; // cancelled
-
-            try {
-                const res = await fetch(`${API_BASE}/api/admin/menu/${itemId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-admin-key': adminKey
-                    },
-                    body: JSON.stringify({ image: url.trim() })
-                });
-                if (res.status === 401) {
-                    alert('Admin key galat hai.');
-                    sessionStorage.removeItem('chirpAdminKey');
-                    return;
-                }
-                if (!res.ok) throw new Error('Update fail hua');
-                const updated = await res.json();
-                item.image = updated.image;
-
-                // Re-render current filtered/search view
-                const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
-                const searchTerm = searchInput.value.toLowerCase();
-                let filtered = activeCategory === 'all' ? menuItems : menuItems.filter(i => i.category === activeCategory);
-                filtered = filtered.filter(i =>
-                    i.name.toLowerCase().includes(searchTerm) ||
-                    i.description.toLowerCase().includes(searchTerm)
-                );
-                displayMenuItems(filtered);
-            } catch (err) {
-                alert('Image update nahi ho paya: ' + err.message);
-            }
-        }
-
-        // Filter by category
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const category = btn.dataset.category;
-
-                // Update active button
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                // Filter items
-                const filtered = category === 'all'
-                    ? menuItems
-                    : menuItems.filter(item => item.category === category);
-
-                displayMenuItems(filtered);
-                searchInput.value = '';
-            });
-        });
 
         // Search functionality
         searchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            const activeCategory = document.querySelector('.filter-btn.active').dataset.category;
+            const activeCategory = filterContainer.querySelector('.filter-btn.active').dataset.category;
 
             let filtered = activeCategory === 'all'
                 ? menuItems
@@ -828,9 +626,13 @@
             displayMenuItems(filtered);
         });
 
-        // Add to cart
+        // Add to cart (blocked for unavailable items even if button is somehow triggered)
         function addToCart(itemId) {
             const item = menuItems.find(i => i.id === itemId);
+            if (!item || item.available === false) {
+                alert('Yeh item abhi available nahi hai.');
+                return;
+            }
             const existingItem = cart.find(i => i.id === itemId);
 
             if (existingItem) {
@@ -911,6 +713,16 @@
         checkoutBtn.addEventListener('click', async () => {
             if (cart.length === 0) {
                 alert('Your cart is empty!');
+                return;
+            }
+
+            // Safety net: agar checkout se pehle koi item admin ne unavailable kar diya ho
+            const stillUnavailable = cart.filter(c => {
+                const latest = menuItems.find(m => m.id === c.id);
+                return latest && latest.available === false;
+            });
+            if (stillUnavailable.length > 0) {
+                alert('Kuch items ab available nahi hain, unhe cart se hata do: ' + stillUnavailable.map(i => i.name).join(', '));
                 return;
             }
 
