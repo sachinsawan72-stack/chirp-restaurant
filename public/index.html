@@ -573,6 +573,17 @@
             });
         }
 
+        // Robust availability check: backend might send available as a real
+        // boolean (false), a number (0), or a string ("false"/"0") depending
+        // on how it's stored (e.g. SQLite stores booleans as 0/1). Treat all
+        // of these "falsy-looking" values as unavailable. Missing field = available.
+        function isItemAvailable(item) {
+            const v = item.available;
+            if (v === undefined || v === null) return true;
+            if (v === false || v === 0 || v === '0' || v === 'false') return false;
+            return true;
+        }
+
         // Display menu items (view-only: no image editing here, that's admin-only)
         function displayMenuItems(items) {
             if (items.length === 0) {
@@ -585,7 +596,7 @@
             noResults.style.display = 'none';
 
             menuGrid.innerHTML = items.map(item => {
-                const isAvailable = item.available !== false; // default true if missing
+                const isAvailable = isItemAvailable(item);
                 return `
                 <div class="menu-item ${isAvailable ? '' : 'unavailable'}" data-category="${item.category}">
                     <div class="menu-item-image">
@@ -629,7 +640,7 @@
         // Add to cart (blocked for unavailable items even if button is somehow triggered)
         function addToCart(itemId) {
             const item = menuItems.find(i => i.id === itemId);
-            if (!item || item.available === false) {
+            if (!item || !isItemAvailable(item)) {
                 alert('Yeh item abhi available nahi hai.');
                 return;
             }
@@ -719,15 +730,15 @@
             // Safety net: agar checkout se pehle koi item admin ne unavailable kar diya ho
             const stillUnavailable = cart.filter(c => {
                 const latest = menuItems.find(m => m.id === c.id);
-                return latest && latest.available === false;
+                return latest && !isItemAvailable(latest);
             });
             if (stillUnavailable.length > 0) {
                 alert('Kuch items ab available nahi hain, unhe cart se hata do: ' + stillUnavailable.map(i => i.name).join(', '));
                 return;
             }
 
-            const tableNumber = prompt('Table Number (optional):', '');
-            const customerName = prompt('Enter Your Name (optional):', '');
+            const tableNumber = prompt('Apna Table Number daalo (optional):', '');
+            const customerName = prompt('Apna naam daalo (optional):', '');
 
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = 'Placing order...';
@@ -749,7 +760,7 @@
                     return;
                 }
 
-                alert(`Order placed successfully!\nOrder ID: ${data.order.id}\nTotal: ₹${data.order.total.toFixed(2)}\n\nThank you for dining with The Chap House! 🐦`);
+                alert(`Order placed successfully!\nOrder ID: ${data.order.id}\nTotal: ₹${data.order.total.toFixed(2)}\n\nThank you for dining with Chirp Restaurant! 🐦`);
 
                 cart = [];
                 updateCart();
