@@ -524,7 +524,7 @@
         // Menu backend se load karo
         async function loadMenu() {
             try {
-                const res = await fetch(`${API_BASE}/api/menu`);
+                const res = await fetch(`${API_BASE}/api/menu?t=${Date.now()}`, { cache: 'no-store' });
                 if (!res.ok) throw new Error('Menu load nahi hua');
                 menuItems = await res.json();
             } catch (err) {
