@@ -726,8 +726,8 @@
                 return;
             }
 
-            const tableNumber = prompt('Apna Table Number daalo (optional):', '');
-            const customerName = prompt('Apna naam daalo (optional):', '');
+            const tableNumber = prompt('Table Number (optional):', '');
+            const customerName = prompt('Enter Your Name (optional):', '');
 
             checkoutBtn.disabled = true;
             checkoutBtn.textContent = 'Placing order...';
@@ -749,7 +749,7 @@
                     return;
                 }
 
-                alert(`Order placed successfully!\nOrder ID: ${data.order.id}\nTotal: ₹${data.order.total.toFixed(2)}\n\nThank you for dining with Tha Chap House! 🐦`);
+                alert(`Order placed successfully!\nOrder ID: ${data.order.id}\nTotal: ₹${data.order.total.toFixed(2)}\n\nThank you for dining with The Chap House! 🐦`);
 
                 cart = [];
                 updateCart();
