@@ -169,10 +169,56 @@
             margin-bottom: 10px;
         }
 
+        .menu-item-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .menu-item h3 {
             font-size: 1.3em;
             color: #333;
             margin-bottom: 5px;
+        }
+
+        /* Veg / Non-Veg indicator - classic Indian square-with-dot symbol */
+        .diet-symbol {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            border: 2px solid;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .diet-symbol::after {
+            content: "";
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .diet-symbol.veg {
+            border-color: #0f8a3c;
+        }
+
+        .diet-symbol.veg::after {
+            background: #0f8a3c;
+        }
+
+        .diet-symbol.nonveg {
+            border-color: #b3261e;
+        }
+
+        .diet-symbol.nonveg::after {
+            background: #b3261e;
+            border-radius: 0;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            width: 9px;
+            height: 8px;
         }
 
         .menu-item-price {
@@ -322,6 +368,9 @@
         .cart-item-name {
             font-weight: 600;
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .cart-item-price {
@@ -486,33 +535,34 @@
 
     <script>
         // Menu Data (fallback - agar API na milе to yeh dikhaya jayega)
+        // isVeg: true = vegetarian (green symbol), false = non-vegetarian (red symbol)
         let menuItems = [];
         const FALLBACK_MENU = [
             // Appetizers
-            { id: 1, name: "Crispy Spring Rolls", category: "appetizers", price: 8.99, description: "Golden fried spring rolls with sweet chili sauce", emoji: "🥟", image: "", available: true },
-            { id: 2, name: "Buffalo Wings", category: "appetizers", price: 12.99, description: "Spicy chicken wings with ranch dressing", emoji: "🍗", image: "", available: true },
-            { id: 3, name: "Mozzarella Sticks", category: "appetizers", price: 9.99, description: "Breaded mozzarella with marinara sauce", emoji: "🧀", image: "", available: true },
-            { id: 4, name: "Loaded Nachos", category: "appetizers", price: 11.99, description: "Tortilla chips with cheese, jalapeños, and sour cream", emoji: "🌮", image: "", available: true },
+            { id: 1, name: "Crispy Spring Rolls", category: "appetizers", price: 8.99, description: "Golden fried spring rolls with sweet chili sauce", emoji: "🥟", image: "", available: true, isVeg: true },
+            { id: 2, name: "Buffalo Wings", category: "appetizers", price: 12.99, description: "Spicy chicken wings with ranch dressing", emoji: "🍗", image: "", available: true, isVeg: false },
+            { id: 3, name: "Mozzarella Sticks", category: "appetizers", price: 9.99, description: "Breaded mozzarella with marinara sauce", emoji: "🧀", image: "", available: true, isVeg: true },
+            { id: 4, name: "Loaded Nachos", category: "appetizers", price: 11.99, description: "Tortilla chips with cheese, jalapeños, and sour cream", emoji: "🌮", image: "", available: true, isVeg: true },
 
             // Main Course
-            { id: 5, name: "Grilled Salmon", category: "mains", price: 24.99, description: "Fresh Atlantic salmon with roasted vegetables", emoji: "🐟", image: "", available: true },
-            { id: 6, name: "Beef Burger Deluxe", category: "mains", price: 15.99, description: "Angus beef patty with bacon, cheese, and fries", emoji: "🍔", image: "", available: true },
-            { id: 7, name: "Chicken Alfredo Pasta", category: "mains", price: 18.99, description: "Creamy fettuccine with grilled chicken", emoji: "🍝", image: "", available: true },
-            { id: 8, name: "Veggie Supreme Pizza", category: "mains", price: 16.99, description: "12-inch pizza with fresh vegetables and mozzarella", emoji: "🍕", image: "", available: true },
-            { id: 9, name: "BBQ Ribs", category: "mains", price: 22.99, description: "Tender pork ribs with house BBQ sauce", emoji: "🍖", image: "", available: true },
-            { id: 10, name: "Shrimp Tacos", category: "mains", price: 14.99, description: "Three soft tacos with grilled shrimp and slaw", emoji: "🦐", image: "", available: true },
+            { id: 5, name: "Grilled Salmon", category: "mains", price: 24.99, description: "Fresh Atlantic salmon with roasted vegetables", emoji: "🐟", image: "", available: true, isVeg: false },
+            { id: 6, name: "Beef Burger Deluxe", category: "mains", price: 15.99, description: "Angus beef patty with bacon, cheese, and fries", emoji: "🍔", image: "", available: true, isVeg: false },
+            { id: 7, name: "Chicken Alfredo Pasta", category: "mains", price: 18.99, description: "Creamy fettuccine with grilled chicken", emoji: "🍝", image: "", available: true, isVeg: false },
+            { id: 8, name: "Veggie Supreme Pizza", category: "mains", price: 16.99, description: "12-inch pizza with fresh vegetables and mozzarella", emoji: "🍕", image: "", available: true, isVeg: true },
+            { id: 9, name: "BBQ Ribs", category: "mains", price: 22.99, description: "Tender pork ribs with house BBQ sauce", emoji: "🍖", image: "", available: true, isVeg: false },
+            { id: 10, name: "Shrimp Tacos", category: "mains", price: 14.99, description: "Three soft tacos with grilled shrimp and slaw", emoji: "🦐", image: "", available: true, isVeg: false },
 
             // Desserts
-            { id: 11, name: "Chocolate Lava Cake", category: "desserts", price: 7.99, description: "Warm chocolate cake with molten center and ice cream", emoji: "🍰", image: "", available: true },
-            { id: 12, name: "Cheesecake", category: "desserts", price: 6.99, description: "New York style cheesecake with berry compote", emoji: "🍰", image: "", available: true },
-            { id: 13, name: "Ice Cream Sundae", category: "desserts", price: 5.99, description: "Three scoops with toppings and whipped cream", emoji: "🍨", image: "", available: true },
-            { id: 14, name: "Apple Pie", category: "desserts", price: 6.49, description: "Classic apple pie with vanilla ice cream", emoji: "🥧", image: "", available: true },
+            { id: 11, name: "Chocolate Lava Cake", category: "desserts", price: 7.99, description: "Warm chocolate cake with molten center and ice cream", emoji: "🍰", image: "", available: true, isVeg: true },
+            { id: 12, name: "Cheesecake", category: "desserts", price: 6.99, description: "New York style cheesecake with berry compote", emoji: "🍰", image: "", available: true, isVeg: true },
+            { id: 13, name: "Ice Cream Sundae", category: "desserts", price: 5.99, description: "Three scoops with toppings and whipped cream", emoji: "🍨", image: "", available: true, isVeg: true },
+            { id: 14, name: "Apple Pie", category: "desserts", price: 6.49, description: "Classic apple pie with vanilla ice cream", emoji: "🥧", image: "", available: true, isVeg: true },
 
             // Drinks
-            { id: 15, name: "Fresh Lemonade", category: "drinks", price: 3.99, description: "Freshly squeezed lemon juice with mint", emoji: "🍋", image: "", available: true },
-            { id: 16, name: "Iced Coffee", category: "drinks", price: 4.49, description: "Cold brew coffee with milk and ice", emoji: "☕", image: "", available: true },
-            { id: 17, name: "Mango Smoothie", category: "drinks", price: 5.99, description: "Tropical mango smoothie with yogurt", emoji: "🥭", image: "", available: true },
-            { id: 18, name: "Coca Cola", category: "drinks", price: 2.99, description: "Chilled soft drink", emoji: "🥤", image: "", available: true }
+            { id: 15, name: "Fresh Lemonade", category: "drinks", price: 3.99, description: "Freshly squeezed lemon juice with mint", emoji: "🍋", image: "", available: true, isVeg: true },
+            { id: 16, name: "Iced Coffee", category: "drinks", price: 4.49, description: "Cold brew coffee with milk and ice", emoji: "☕", image: "", available: true, isVeg: true },
+            { id: 17, name: "Mango Smoothie", category: "drinks", price: 5.99, description: "Tropical mango smoothie with yogurt", emoji: "🥭", image: "", available: true, isVeg: true },
+            { id: 18, name: "Coca Cola", category: "drinks", price: 2.99, description: "Chilled soft drink", emoji: "🥤", image: "", available: true, isVeg: true }
         ];
 
         // API base - same origin (backend jo frontend ko serve kar raha hai)
@@ -584,6 +634,25 @@
             return true;
         }
 
+        // Veg check: same "falsy-looking values" robustness as availability.
+        // Returns true (veg), false (non-veg), or null (unknown - field not sent by backend).
+        function isItemVeg(item) {
+            const v = item.isVeg;
+            if (v === undefined || v === null) return null;
+            if (v === false || v === 0 || v === '0' || v === 'false') return false;
+            return true;
+        }
+
+        // Builds the small green/red square-with-dot symbol markup.
+        // Returns '' when veg status is unknown so nothing broken shows up.
+        function dietSymbolHTML(item) {
+            const veg = isItemVeg(item);
+            if (veg === null) return '';
+            const cls = veg ? 'veg' : 'nonveg';
+            const label = veg ? 'Vegetarian' : 'Non-Vegetarian';
+            return `<span class="diet-symbol ${cls}" title="${label}" aria-label="${label}"></span>`;
+        }
+
         // Display menu items (view-only: no image editing here, that's admin-only)
         function displayMenuItems(items) {
             if (items.length === 0) {
@@ -607,7 +676,10 @@
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
-                            <h3>${item.name}</h3>
+                            <div class="menu-item-title-row">
+                                ${dietSymbolHTML(item)}
+                                <h3>${item.name}</h3>
+                            </div>
                             <span class="menu-item-price">₹${item.price.toFixed(2)}</span>
                         </div>
                         <span class="menu-item-category">${item.category}</span>
@@ -673,7 +745,7 @@
             cartItems.innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <div class="cart-item-info">
-                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-name">${dietSymbolHTML(item)}${item.name}</div>
                         <div class="cart-item-price">₹${item.price.toFixed(2)}</div>
                     </div>
                     <div class="cart-item-controls">
