@@ -759,12 +759,29 @@
 
         /* =========================================
            NOT AVAILABLE
+           Blurred, greyed-out and un-clickable so
+           customers can visually see it's off the
+           menu right now and can't select it.
         ========================================= */
 
         .menu-item.unavailable {
 
-            opacity:
-                .55;
+            opacity: .5;
+
+            filter: blur(1.5px) grayscale(35%);
+
+            pointer-events: none;
+
+        }
+
+
+        .menu-item.unavailable:hover {
+
+            transform: none;
+
+            border-color: #292929;
+
+            box-shadow: none;
 
         }
 
