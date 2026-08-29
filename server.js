@@ -1,4 +1,4 @@
-// Chirp Restaurant - Backend Server (Express + JSON file storage)
+// Chirp Restaurant - Backend Server (Express + JSON file storage on persistent disk)
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -8,13 +8,43 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'chirp123'; // Render me environment variable se change karo
 
-const MENU_FILE = path.join(__dirname, 'data', 'menu.json');
-const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
-const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+// ---------- DATA_DIR: yehi asli fix hai ----------
+// Local pe chalate waqt DATA_DIR set nahi hoga, to yeh apne aap project ke andar
+// wali 'data' folder use karega (jaisa pehle tha).
+// Render pe DATA_DIR ko persistent disk ke mount path par set karo (jaise /var/data),
+// taaki restart/redeploy hone par bhi data wahi ka wahi rahe.
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(DATA_DIR, 'uploads');
 
-// Agar uploads folder nahi hai to bana do
+const MENU_FILE = path.join(DATA_DIR, 'menu.json');
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+
+// Agar disk khali hai (pehli baar mount hua hai) to zaroori folders bana do
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// ---------- Seeding: agar persistent disk par pehli baar menu.json nahi hai,
+// to repo ke andar wale seed data (data-seed/menu.json) se ek baar copy kar do.
+// Isse purana menu data disk par migrate ho jata hai, aur uske baad
+// sab changes disk par hi save/permanent rahenge.
+const SEED_DIR = path.join(__dirname, 'data-seed');
+
+if (!fs.existsSync(MENU_FILE)) {
+  const seedMenu = path.join(SEED_DIR, 'menu.json');
+  if (fs.existsSync(seedMenu)) {
+    fs.copyFileSync(seedMenu, MENU_FILE);
+    console.log('✅ menu.json seed se disk par copy ho gaya (pehli baar).');
+  } else {
+    fs.writeFileSync(MENU_FILE, '[]');
+  }
+}
+
+if (!fs.existsSync(ORDERS_FILE)) {
+  fs.writeFileSync(ORDERS_FILE, '[]');
 }
 
 // ---------- Multer setup (image upload) ----------
@@ -40,13 +70,11 @@ const upload = multer({
   }
 });
 
-// Agar orders.json nahi hai to bana do
-if (!fs.existsSync(ORDERS_FILE)) {
-  fs.writeFileSync(ORDERS_FILE, '[]');
-}
-
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+// Uploads ab persistent disk par hai (public folder ke andar nahi), isliye
+// isko explicitly '/uploads' route par serve karna hoga.
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ---------- Helpers ----------
 function readJSON(file) {
@@ -65,13 +93,11 @@ function checkAdmin(req, res, next) {
 
 // ---------- Public API ----------
 
-// Menu ki poori list
 app.get('/api/menu', (req, res) => {
   const menu = readJSON(MENU_FILE);
   res.json(menu);
 });
 
-// Naya order place karna
 app.post('/api/orders', (req, res) => {
   const { items, customerName, customerPhone, tableNumber } = req.body;
 
@@ -113,13 +139,11 @@ app.post('/api/orders', (req, res) => {
 
 // ---------- Admin API (protected by x-admin-key header) ----------
 
-// Sab orders dekhna (kitchen/owner dashboard ke liye)
 app.get('/api/admin/orders', checkAdmin, (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   res.json(orders.reverse());
 });
 
-// Order status update (received -> preparing -> ready -> completed)
 app.patch('/api/admin/orders/:id', checkAdmin, (req, res) => {
   const orders = readJSON(ORDERS_FILE);
   const order = orders.find(o => o.id === parseInt(req.params.id));
@@ -129,7 +153,6 @@ app.patch('/api/admin/orders/:id', checkAdmin, (req, res) => {
   res.json(order);
 });
 
-// Menu item ke details update karna (naam, category, price, description, emoji, image URL)
 app.patch('/api/admin/menu/:id', checkAdmin, (req, res) => {
   const menu = readJSON(MENU_FILE);
   const item = menu.find(m => m.id === parseInt(req.params.id));
@@ -141,20 +164,19 @@ app.patch('/api/admin/menu/:id', checkAdmin, (req, res) => {
   if (typeof req.body.image === 'string') item.image = req.body.image;
   if (req.body.price !== undefined && !isNaN(parseFloat(req.body.price))) item.price = parseFloat(req.body.price);
   if (typeof req.body.description === 'string') item.description = req.body.description;
+  if (req.body.available !== undefined) item.available = !!req.body.available; // pehle yeh missing tha, isliye toggle save nahi hota tha
 
   writeJSON(MENU_FILE, menu);
   res.json(item);
 });
 
-// Menu item delete karna
 app.delete('/api/admin/menu/:id', checkAdmin, (req, res) => {
   const menu = readJSON(MENU_FILE);
   const item = menu.find(m => m.id === parseInt(req.params.id));
   if (!item) return res.status(404).json({ error: 'Menu item nahi mila.' });
 
-  // Uploaded image bhi delete kar do agar hai
   if (item.image && item.image.startsWith('/uploads/')) {
-    const oldPath = path.join(__dirname, 'public', item.image);
+    const oldPath = path.join(UPLOADS_DIR, path.basename(item.image));
     if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
   }
 
@@ -163,7 +185,6 @@ app.delete('/api/admin/menu/:id', checkAdmin, (req, res) => {
   res.json({ message: 'Item delete ho gaya.' });
 });
 
-// Menu item ki image FILE upload karna (device se image select karke)
 app.post('/api/admin/menu/:id/image-upload', checkAdmin, (req, res) => {
   upload.single('image')(req, res, (err) => {
     if (err) {
@@ -176,13 +197,12 @@ app.post('/api/admin/menu/:id/image-upload', checkAdmin, (req, res) => {
     const menu = readJSON(MENU_FILE);
     const item = menu.find(m => m.id === parseInt(req.params.id));
     if (!item) {
-      fs.unlinkSync(req.file.path); // fazool file delete kar do
+      fs.unlinkSync(req.file.path);
       return res.status(404).json({ error: 'Menu item nahi mila.' });
     }
 
-    // Purani uploaded image ho to delete kar do (sirf apne uploads folder ki file, external URL ko chhedo mat)
     if (item.image && item.image.startsWith('/uploads/')) {
-      const oldPath = path.join(__dirname, 'public', item.image);
+      const oldPath = path.join(UPLOADS_DIR, path.basename(item.image));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
 
@@ -192,7 +212,6 @@ app.post('/api/admin/menu/:id/image-upload', checkAdmin, (req, res) => {
   });
 });
 
-// Naya menu item add karna
 app.post('/api/admin/menu', checkAdmin, (req, res) => {
   const menu = readJSON(MENU_FILE);
   const newId = menu.length ? Math.max(...menu.map(m => m.id)) + 1 : 1;
@@ -203,16 +222,17 @@ app.post('/api/admin/menu', checkAdmin, (req, res) => {
     price: parseFloat(req.body.price) || 0,
     description: req.body.description || '',
     emoji: req.body.emoji || '🍽️',
-    image: req.body.image || ''
+    image: req.body.image || '',
+    available: req.body.available !== undefined ? !!req.body.available : true
   };
   menu.push(newItem);
   writeJSON(MENU_FILE, menu);
   res.status(201).json(newItem);
 });
 
-// Health check (Render isko use kar sakta hai)
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.listen(PORT, () => {
   console.log(`Chirp Restaurant server chal raha hai: http://localhost:${PORT}`);
+  console.log(`Data directory: ${DATA_DIR}`);
 });
